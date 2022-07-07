@@ -22,9 +22,9 @@ static void ps_free(void* /*param*/, void* /*packet*/)
 	return;
 }
 
-static void ps_write(void* param, int stream, void* packet, size_t bytes)
+static int ps_write(void* param, int stream, void* packet, size_t bytes)
 {
-	fwrite(packet, bytes, 1, (FILE*)param);
+	return 1 == fwrite(packet, bytes, 1, (FILE*)param) ? 0 : ferror((FILE*)param);
 }
 
 static inline const char* ps_type(int type)
@@ -80,7 +80,7 @@ static int flv_ondemux(void* ps, int codec, const void* data, size_t bytes, uint
 void flv_2_mpeg_ps_test(const char* flv)
 {
 	char output[256] = { 0 };
-	snprintf(output, sizeof(output), "%s.ps", flv);
+	snprintf(output, sizeof(output) - 1, "%s.ps", flv);
 
 	struct ps_muxer_func_t handler;
 	handler.alloc = ps_alloc;
@@ -94,11 +94,13 @@ void flv_2_mpeg_ps_test(const char* flv)
 	flv_demuxer_t* demuxer = flv_demuxer_create(flv_ondemux, ps);
 
 	int r, type;
+	size_t taglen;
 	uint32_t timestamp;
 	static uint8_t packet[2 * 1024 * 1024];
-	while ((r = flv_reader_read(f, &type, &timestamp, packet, sizeof(packet))) > 0)
+	while (1 == flv_reader_read(f, &type, &timestamp, &taglen, packet, sizeof(packet)))
 	{
-		assert(0 == flv_demuxer_input(demuxer, type, packet, r, timestamp));
+		r = flv_demuxer_input(demuxer, type, packet, taglen, timestamp);
+		assert(0 == r);
 	}
 
 	flv_demuxer_destroy(demuxer);

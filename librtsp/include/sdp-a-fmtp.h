@@ -71,6 +71,7 @@ struct sdp_a_fmtp_h265_t
 	char sprop_vps[1];
 	char sprop_sps[1];
 	char sprop_pps[1];
+	char sprop_sei[1];
 };
 
 int sdp_a_fmtp_h265(const char* fmtp, int *format, struct sdp_a_fmtp_h265_t *h265);
@@ -121,5 +122,12 @@ struct sdp_a_fmtp_mpeg4_t
 };
 
 int sdp_a_fmtp_mpeg4(const char* fmtp, int *format, struct sdp_a_fmtp_mpeg4_t *mpeg4);
+
+struct sdp_a_fmtp_rtx_t
+{
+	int apt;
+	int rtx_time; // milliseconds 
+};
+int sdp_a_fmtp_rtx(const char* fmtp, int* format, struct sdp_a_fmtp_rtx_t* rtx);
 
 #endif /* !_sdp_a_fmtp_h_ */
